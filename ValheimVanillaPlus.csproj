@@ -43,4 +43,25 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExDir)\plugins\ValheimVanillaPlus" />
   </Target>
 
+  <!-- Thunderstore package: dotnet build -c Release -t:PackThunderstore
+       Zips Thunderstore\ (manifest, README, CHANGELOG, icon) with the plugin into bin\thunderstore\. -->
+  <Target Name="PackThunderstore" DependsOnTargets="Build">
+    <PropertyGroup>
+      <TsDir>$(MSBuildProjectDirectory)\Thunderstore</TsDir>
+      <TsStage>$(MSBuildProjectDirectory)\obj\thunderstore</TsStage>
+      <TsManifest>$([System.IO.File]::ReadAllText('$(TsDir)\manifest.json'))</TsManifest>
+      <TsVersion>$([System.Text.RegularExpressions.Regex]::Match($(TsManifest), 'version_number\W+([\d.]+)').Groups[1].Value)</TsVersion>
+      <TsPluginSource>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\Core\VanillaPlusPlugin.cs'))</TsPluginSource>
+      <TsPluginVersion>$([System.Text.RegularExpressions.Regex]::Match($(TsPluginSource), 'const string Version\W+([\d.]+)').Groups[1].Value)</TsPluginVersion>
+      <TsZip>$(MSBuildProjectDirectory)\bin\thunderstore\liekos47-ValheimVanillaPlus-$(TsVersion).zip</TsZip>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(TsDir)\icon.png')" Text="Thunderstore\icon.png is missing (256x256 PNG)." />
+    <Error Condition="'$(TsVersion)' != '$(TsPluginVersion)'" Text="Thunderstore\manifest.json version_number ($(TsVersion)) differs from VanillaPlusPlugin.Version ($(TsPluginVersion))." />
+    <RemoveDir Directories="$(TsStage)" />
+    <Copy SourceFiles="$(TsDir)\manifest.json;$(TsDir)\README.md;$(TsDir)\CHANGELOG.md;$(TsDir)\icon.png;$(TargetPath)" DestinationFolder="$(TsStage)" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\bin\thunderstore" />
+    <ZipDirectory SourceDirectory="$(TsStage)" DestinationFile="$(TsZip)" Overwrite="true" />
+    <Message Importance="high" Text="Thunderstore package: $(TsZip)" />
+  </Target>
+
 </Project>

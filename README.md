@@ -29,6 +29,12 @@ is loaded in place of the running one within a couple of seconds, no restart. Th
 in memory until the game closes; if something looks off after a reload, restart once before
 chasing it. See `Core/HotReload.cs`.
 
+**Thunderstore package**: `dotnet build -c Release -t:PackThunderstore` writes
+`bin\thunderstore\liekos47-ValheimVanillaPlus-<version>.zip` from the `Thunderstore\` folder
+(`manifest.json`, the player README, `CHANGELOG.md`, `icon.png`) plus the DLL. For a release, raise
+`Version` in `Core/VanillaPlusPlugin.cs` and `version_number` in the manifest together (the build
+refuses if they differ), add a changelog entry, and copy feature changes into `Thunderstore\README.md`.
+
 ## Hotkeys (in game)
 
 | Key | Toggle |
@@ -39,7 +45,7 @@ chasing it. See `Core/HotReload.cs`.
 | Left Alt + Shift + click | In the inventory: drop every stack of the clicked item |
 | Home | Night vision (no torch needed at night / in caves) – starts OFF |
 
-Defaults and keys are editable in `BepInEx\config\local.valheimvanillaplus.cfg`, or from the menu's
+Defaults and keys are editable in `BepInEx\config\liekos47.valheimvanillaplus.cfg`, or from the menu's
 More tab (Open config file / Reload config file).
 
 **Look** (`[Menu] Theme`, picked at the top of the menu): everything the mod lets you click or
@@ -117,7 +123,7 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   distance and compass direction and Map / Rename / Delete buttons. Shown on screen as a marker
   with name and distance, and as map pins that are not saved to your character. A "Last death"
   waypoint is added where you die. No teleport. Kept only in
-  `BepInEx\config\local.valheimvanillaplus.waypoints.txt`. `[Waypoints] Enabled` (on), `OnScreen`
+  `BepInEx\config\liekos47.valheimvanillaplus.waypoints.txt`. `[Waypoints] Enabled` (on), `OnScreen`
   (on), `OnScreenRange` (0 = any distance), `MapPins` (on), `LastDeath` (on).
 - **Radar** – a round overlay showing creatures and players around you, turning with the camera:
   red = hostile, yellow = passive, green = tamed, purple = boss, blue = players (with names);

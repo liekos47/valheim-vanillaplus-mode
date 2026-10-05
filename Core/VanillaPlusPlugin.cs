@@ -11,7 +11,7 @@ namespace ValheimVanillaPlus
     [BepInPlugin(Guid, Name, Version)]
     public class VanillaPlusPlugin : BaseUnityPlugin
     {
-        public const string Guid = "local.valheimvanillaplus";
+        public const string Guid = "liekos47.valheimvanillaplus";
         public const string Name = "Valheim Vanilla Plus";
         public const string Version = "0.1.0";
 
@@ -87,7 +87,7 @@ namespace ValheimVanillaPlus
         // Waypoint markers and the radar step aside while the inventory, a trader or the map is open.
         internal static bool OverlaysHidden => InventoryGui.IsVisible() || StoreGui.IsVisible() || Minimap.IsOpen() || StorageWindow.IsOpen;
 
-        // Opens local.valheimvanillaplus.cfg in Notepad (edit, save, then "Reload config file").
+        // Opens liekos47.valheimvanillaplus.cfg in Notepad (edit, save, then "Reload config file").
         internal static void OpenConfigFile()
         {
             try

@@ -18,12 +18,12 @@ namespace ValheimVanillaPlus
     // Waypoints: named spots per world, shown on screen (name + distance, through walls) and
     // optionally as map pins, with Show on map / Rename / Delete in the menu. A "Last death"
     // waypoint can be added automatically. Stored only in a small file on your PC
-    // (BepInEx/config/local.valheimvanillaplus.waypoints.txt); map pins are added with save = false,
+    // (BepInEx/config/liekos47.valheimvanillaplus.waypoints.txt); map pins are added with save = false,
     // so nothing goes into your character or the world. There is no teleport.
     internal static class Waypoints
     {
         public static readonly List<Waypoint> All = new List<Waypoint>();
-        private static string FilePath => Path.Combine(Paths.ConfigPath, "local.valheimvanillaplus.waypoints.txt");
+        private static string FilePath => Path.Combine(Paths.ConfigPath, "liekos47.valheimvanillaplus.waypoints.txt");
         private const string DeathName = "Last death";
         private static GUIStyle _label;
 
