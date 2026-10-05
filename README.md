@@ -54,14 +54,27 @@ one theme. *Valheim* (default) uses the game's own font and the button, text-fie
 pictures of the game's "Enter text" box; *Dark* and *Light* are flat colors; *Classic* is Unity's
 gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep their own colors.
 
+| Classic | Dark | Light | Valheim |
+|---|---|---|---|
+| ![Classic theme](Screenshots/theme-classic.png) | ![Dark theme](Screenshots/theme-dark.png) | ![Light theme](Screenshots/theme-light.png) | ![Valheim theme](Screenshots/theme-valheim.png) |
+
 ## Features
 
 - **Clear button** – a "Clear" button in the game's "Enter text" box (signs, names, portal tags),
   left of Cancel, that empties the field and keeps it focused. `[Interface] ClearButton`, default on.
+
+  ![Clear button in the Enter text box](Screenshots/dark-sign-clear-button.png)
+
 - **FPS counter** – frames per second in the top-left corner, averaged over half a second: green
   from 50, yellow from 25, red below. `[Interface] ShowFps`, default off (menu → Interface).
+
+  ![FPS counter and the Interface tab](Screenshots/dark-show-fps.png)
+
 - **World seed** – menu → More shows the name, seed, seed number and generator version of the
   world you are in, with a "Copy seed to clipboard" button. Works on servers too (see How it works).
+
+  ![World seed in the More tab](Screenshots/dark-more-ui.png)
+
 - **Sign editor** – while you edit a sign, a panel next to the text box gives buttons for what
   signs already understand but the game has no UI for: colors (palette, RGB sliders, hex), bold /
   italic / underline / strike / highlight, size, alignment, spacing, fonts, two-tone letters,
@@ -71,12 +84,24 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   - `Editor` (on) – the panel itself.
   - `CharacterLimit` (150) – tags use up characters, so the sign limit is raised from the game's 50.
   - `CustomIcons` (on) – item and map pin icons.
-  - `DefaultColor` (empty) – color given to a confirmed sign that has none of its own.
+  - `DefaultColor` (empty) – color given to a confirmed sign that has none of its own. Set it in
+    the menu (Interface → Signs) with the row of ready-made colors, the R / G / B sliders or a
+    hex code; "Game default" clears it. The sign editor's "Use current color" sets it too.
+
+  ![Sign editor panel beside the Enter text box](Screenshots/dark-sign-enter-ui.png)
+
+  ![Default sign color prompt](Screenshots/set-default-sign-color.png)
+
 - **Sign search** – menu → Interface → "Search nearby signs for text…": every sign within range
   whose text contains what you typed (any case, tags ignored; commas = any of several words) is
   marked for a few seconds with a rainbow box, a line from the bottom of the screen and its text.
   Visual and local only. `[Signs] SearchRadius` (60 m), `SearchHighlightSeconds` (10),
   `SearchText` (the last search).
+
+  | Search | Result |
+  |---|---|
+  | ![Sign search prompt](Screenshots/dark-sign-search-ui.png) | ![Sign search result](Screenshots/dark-sign-search-result-ui.png) |
+
 - **Craft search** – a search box above the crafting list (inventory, workbench, forge, ...) that
   filters the recipes by the item made or any ingredient, e.g. "bronze" or "copper". Only recipes
   the game already lists are shown; nothing is unlocked. Cleared when the inventory closes.
@@ -88,6 +113,9 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   wards are respected, and a chest another player has open is skipped. Menu → Crafting.
   `[Crafting] CraftFromChests` (off), `ChestRange` (30 m). Don't combine with another
   craft-from-containers mod; the menu warns if one is installed.
+
+  ![Crafting tab](Screenshots/dark-crafting-ui.png)
+
 - **Storage window** (F2, or menu → Items) – every item in your nearby player-built chests (also
   carts and ship storage) as one list with icon, total and "in N chests". Search, category filter
   (Materials / Food & meads / Weapons & tools / Armor / Other), sort by name or count, range
@@ -104,6 +132,14 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   - Private chests and wards are respected; a chest another player has open is skipped.
   - `[Storage] Enabled` (on), `Range` (30 m), the `Keep…` rules, `NeverStore`, `PositionX` /
     `PositionY`; `[Hotkeys] ToggleStorage` (F2).
+
+  ![Items tab](Screenshots/dark-items-ui.png)
+
+- **Store all button** – a "Store all" button under an open chest that moves everything from
+  your inventory into that chest, except equipped items and whatever the storage window's keep
+  rules protect (hotbar row, ticked categories, never-store list; one shared set of rules). It
+  fills the chest you have open whether or not it already holds the item, and shows "Stored N
+  stacks". Menu → Items. `[StoreAll] Enabled` (off).
 - **Batch click** – in the inventory screen, Left Alt + click an item with a chest open moves
   every stack of it to the other side; Left Alt + Shift + click drops every stack of it. A
   top-left message says how many stacks moved. Quest items are never touched, and equipped copies
@@ -113,7 +149,15 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   up anything, and the pickup range and speed stay the game's own. List entries are item names,
   prefab (`TrophyDeer`) or as shown in game (`Deer trophy`), any case, with `*` as a wildcard
   (`Trophy*`, `*Ore`, `*mead*`). `[AutoPickup] FilterMode` (Off), `Whitelist`, `Blacklist`; edit
-  the lists from the menu or in the config file.
+  the lists from the menu or in the config file. "Pick items by icon" in the same section opens
+  a grid of every item in the game (read from the running game, so new items appear on their
+  own): choose whitelist or blacklist, type in Find to narrow down, click an icon to add it and
+  click a framed one (green = whitelist, red = blacklist) to take it out. "Only items in the
+  list" shows what a list holds.
+- **Range circle** – while you drag a distance slider (storage range, chest range, sign search
+  range, radar range, waypoint range), a circle of that radius is drawn on the ground around
+  you with the value on it; it fades about 2 s after you stop. `[Menu] RangePreview` (on),
+  toggle at the top of the menu.
 - **Repair alert** – warns in the middle of the screen when an equipped weapon, tool, shield or
   armor piece drops below a durability line (orange, "… is at 18% - repair soon") and again when
   it breaks (red). Each item warns once per drop; repairing it re-arms the warning. While
@@ -125,17 +169,30 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   waypoint is added where you die. No teleport. Kept only in
   `BepInEx\config\liekos47.valheimvanillaplus.waypoints.txt`. `[Waypoints] Enabled` (on), `OnScreen`
   (on), `OnScreenRange` (0 = any distance), `MapPins` (on), `LastDeath` (on).
+
+  ![World tab](Screenshots/dark-world-ui.png)
+
 - **Radar** – a round overlay showing creatures and players around you, turning with the camera:
   red = hostile, yellow = passive, green = tamed, purple = boss, blue = players (with names);
   ^ / v marks a dot more than 5 m above / below you. Menu → Vision. `[Radar] Enabled` (off),
   `Range` (60 m), `Size`, `Opacity`, `Corner`, `OffsetX` / `OffsetY`, `Mobs`, `Passive`,
   `Players`, `PlayerNames`.
+
+  | Radar | Settings |
+  |---|---|
+  | ![Radar overlay](Screenshots/radar-ui.png) | ![Vision tab](Screenshots/dark-vision-ui.png) |
+
 - **Player stats** – menu → Stats: a read-only page of your character's numbers, worked out with
   the game's own formulas. Vitals (health, stamina, eitr, armor, movement penalty from gear, carry
   weight), regeneration per second, food eaten with time left, the equipped weapon (damage types,
   damage per hit range from your skill and buffs, stamina per attack, block and parry),
   resistances and weaknesses, active effects with time left, and measured combat from your real
   fighting (swings, hits and damage per second, biggest hit). No settings.
+
+  | Vitals, regeneration, food | Weapon, resistances, effects |
+  |---|---|
+  | ![Stats tab, top](Screenshots/dark-stats-ui.png) | ![Stats tab, bottom](Screenshots/dark-stats-ui-2.png) |
+
 - **Auto reconnect** – when a server session ends with "disconnected", the main menu shows a
   countdown box ("Disconnected — reconnecting in 8 s (attempt 1/10)") and joins the same server
   again with the same character. Cancel button or Esc stops it. The server password you typed is
@@ -146,17 +203,21 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   Fog is left as the game sets it. Visual and local only. `[NightVision] Enabled` (off),
   `Brightness` (0.6).
 
+  | Off | Brightness 0.5 | Brightness 1.0 |
+  |---|---|---|
+  | ![Night vision off](Screenshots/dark-brightness-off.png) | ![Night vision at 0.5](Screenshots/dark-brightness-0.5.png) | ![Night vision at 1.0](Screenshots/dark-brightness-full.png) |
+
 ## Layout
 
 | Folder | What lives there |
 |--------|------------------|
-| `Core/` | The plugin (`VanillaPlusPlugin.cs`: config entries, update loop), the options menu (`MenuWindow.cs`, `MenuTheme.cs`) input blocking while typing in a search box (`SearchInputBlock.cs`), hot reload (`HotReload.cs`), and shared helpers: on-screen boxes / lines / labels (`Overlay.cs`), asking for text with the game's box (`TextPrompt.cs`), world key and compass (`WorldInfo.cs`) |
+| `Core/` | The plugin (`VanillaPlusPlugin.cs`: config entries, update loop), the options menu (`MenuWindow.cs`, `MenuTheme.cs`) input blocking while typing in a search box (`SearchInputBlock.cs`), hot reload (`HotReload.cs`), and shared helpers: on-screen boxes / lines / labels (`Overlay.cs`), asking for text with the game's box (`TextPrompt.cs`), world key and compass (`WorldInfo.cs`), the range circle (`RangePreview.cs`), the color picker row used in the menu (`ColorPicker.cs`) |
 | `Interface/` | Changes to the game's own screens: Clear button (`TextInputClear.cs`), FPS counter (`FpsCounter.cs`) |
 | `Crafting/` | Craft search (`CraftSearch.cs`), craft from chests (`CraftFromChests.cs`) |
-| `Chests/` | Storage window (`Storage.cs`), batch click (`BatchTransfer.cs`), the list of loaded chests (`ChestTracker.cs`) |
+| `Chests/` | Storage window (`Storage.cs`), Store all button (`StoreAll.cs`), batch click (`BatchTransfer.cs`), the list of loaded chests (`ChestTracker.cs`) |
 | `World/` | Waypoints (`Waypoints.cs`) |
 | `Stats/` | Player stats tab (`PlayerStats.cs`) |
-| `Items/` | Auto-pickup filter (`PickupFilter.cs`), repair alert (`DurabilityAlert.cs`) |
+| `Items/` | Auto-pickup filter (`PickupFilter.cs`), the icon grid for picking items (`ItemPicker.cs`), repair alert (`DurabilityAlert.cs`) |
 | `Network/` | Auto reconnect (`AutoReconnect.cs`) |
 | `Vision/` | Night vision (`NightVision.cs`), radar (`Radar.cs`) |
 | `Signs/` | Sign editor: the panel (`SignEditor.cs`), fonts and two-tones (`SignTags.cs`), item / map pin icons (`SignIcons.cs`); sign search (`SignSearch.cs`) |
@@ -206,6 +267,10 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
   open the cursor is free and player input is blocked, like the menu. God mode's shopping-list
   section, "Craft & upgrade" tab and range circle were left out. Switched off
   when Valheim God Mode is installed.
+- **Store all button** – IMGUI button placed under `InventoryGui.m_container` while a chest is
+  open; each inventory item not kept (`Storage.Kept`, equipped, hotbar row) goes through
+  `Inventory.MoveItemToThis` into `m_currentContainer`. Switched off when Valheim God Mode is
+  installed.
 - **Batch click** – `InventoryGui.OnSelectedItem` prefix: with the move key held, every stack with
   the clicked item's name goes through `Inventory.MoveItemToThis` (move) or `Player.DropItem`
   (drop), the same calls the game uses for a single stack. Switched off when Valheim God Mode is
@@ -214,7 +279,14 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
   `ItemDrop`s within pickup range (+2 m) and a finalizer sets it back, so the game's own pass
   skips them for that call only. Each list entry becomes a case-insensitive pattern (`*` = any
   characters) matched against the prefab name and the localized name. Switched off when Valheim
-  God Mode is installed (it has its own filter, without wildcards).
+  God Mode is installed (it has its own filter, without wildcards). The icon picker lists
+  `ObjectDB.instance.m_items` entries that have an icon, sorted by localized name; a click adds
+  the prefab name to the list setting or removes the entry with that prefab / shown name. An
+  item covered only by a `*` entry is framed but can't be clicked out; edit the text for that.
+- **Range circle** – `MenuWindow.Slider` calls `RangePreview.Show` for sliders labelled in meters
+  ("(m)"), as does the storage window's range slider. The ring is 72 points around the player at
+  ground height (`ZoneSystem.GetGroundHeight`, or the water level where higher), projected with
+  `Camera.WorldToScreenPoint` and drawn as lines in `OnGUI`.
 - **Repair alert** – once a second, `Inventory.GetEquippedItems()` is checked: `m_durability /
   GetMaxDurability()` for items that use durability. Warnings go through `Player.Message` and the
   log; nothing on the item is changed. Switched off when Valheim God Mode is installed (it has
@@ -279,4 +351,6 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
 15. Open menu → Stats with food eaten and a weapon equipped: every section fills in; hit something and check the combat numbers move.
 16. Press F2 near some chests: the list fills; Take 1 / Stack / All work; Store all sends an item to the chest already holding it, says "chest full" when that chest is full and "no chest assigned" for an item no chest holds.
 17. With the Valheim theme, open the menu in a world: buttons, text fields and the window should look like the game's "Enter text" box. If they are plain brown, check the log line starting "Valheim theme:".
-18. Build once more with the game running and check the log says "Hot reload: switching to the build from ...".
+18. Drag a range slider: the circle shows on the ground. Open "Pick items by icon": the grid fills, includes any items the update added, and clicking adds / removes list entries.
+19. With the Store all button on, open a chest: the button sits under the chest panel and moves everything except equipped items and the kept categories.
+20. Build once more with the game running and check the log says "Hot reload: switching to the build from ...".

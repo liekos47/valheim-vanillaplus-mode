@@ -66,6 +66,37 @@ namespace ValheimVanillaPlus
             return mode == PickupFilterMode.Whitelist ? listed : !listed;
         }
 
+        // ----- for the icon picker in the menu -----
+
+        // Is this item on the whitelist (or the blacklist)? Wildcard entries count.
+        public static bool InList(bool whitelist, string prefab, string shown)
+        {
+            foreach (var entry in whitelist ? _whitelist : _blacklist)
+                if (entry.IsMatch(prefab) || entry.IsMatch(shown)) return true;
+            return false;
+        }
+
+        // Adds the item to the list (by prefab name), or takes it out if it's there. Returns what happened.
+        public static string Toggle(bool whitelist, string prefab, string shown)
+        {
+            var setting = whitelist ? VanillaPlusPlugin.PickupWhitelist : VanillaPlusPlugin.PickupBlacklist;
+            string which = whitelist ? "whitelist" : "blacklist";
+            var entries = new List<string>();
+            foreach (string part in (setting.Value ?? "").Split(','))
+                if (part.Trim().Length > 0) entries.Add(part.Trim());
+
+            int removed = entries.RemoveAll(e => string.Equals(e, prefab, System.StringComparison.OrdinalIgnoreCase)
+                                              || string.Equals(e, shown, System.StringComparison.OrdinalIgnoreCase));
+            if (removed == 0)
+            {
+                if (InList(whitelist, prefab, shown))
+                    return $"{shown} is covered by a * entry of the {which}; use \"Edit {which}\" to change that";
+                entries.Add(prefab);
+            }
+            setting.Value = string.Join(", ", entries); // SettingChanged rebuilds the lists
+            return removed > 0 ? $"Removed {shown} from the {which}" : $"Added {shown} to the {which}";
+        }
+
         public static string Summary() =>
             $"whitelist: {Shown(VanillaPlusPlugin.PickupWhitelist.Value)}\nblacklist: {Shown(VanillaPlusPlugin.PickupBlacklist.Value)}";
 

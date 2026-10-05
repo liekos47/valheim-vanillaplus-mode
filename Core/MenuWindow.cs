@@ -74,7 +74,13 @@ namespace ValheimVanillaPlus
             _search = GUILayout.TextField(_search ?? "", 40);
             if (GUILayout.Button("✕", GUILayout.Width(28f))) { _search = ""; GUI.FocusControl(null); }
             GUILayout.EndHorizontal();
-            if (Event.current.type == EventType.Repaint) Typing = GUI.GetNameOfFocusedControl() == SearchControl;
+            if (Event.current.type == EventType.Repaint)
+            {
+                string focused = GUI.GetNameOfFocusedControl();
+                Typing = focused == SearchControl || focused == ItemPicker.Control || focused == ColorPicker.Control;
+            }
+
+            Toggle(VanillaPlusPlugin.RangePreviewEnabled, "Show a circle on the ground when dragging a range slider");
 
             if (!Searching)
             {
@@ -142,12 +148,13 @@ namespace ValheimVanillaPlus
             if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its batch click is used instead of this one.");
             Toggle(VanillaPlusPlugin.BatchTransferEnabled, $"{VanillaPlusPlugin.BatchMoveKey.Value}+click: move all of that item to/from the chest; +Shift: throw all of it out");
 
-            Header("Storage window");
+            Header("Storage window & Store all");
             if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its storage window is used instead of this one.");
             Toggle(VanillaPlusPlugin.StorageEnabled, $"Storage window ({VanillaPlusPlugin.StorageKey.Value}): all nearby chests in one searchable list");
             Slider(VanillaPlusPlugin.StorageRange, "   Range (m)", 5f, 100f, "0");
             if (Player.m_localPlayer != null && VanillaPlusPlugin.StorageOn && Btn("Open storage window")) StorageWindow.Toggle();
-            Lbl("   'Store everything' keeps equipped items, and:");
+            Toggle(VanillaPlusPlugin.StoreAllButton, "'Store all' button under an open chest");
+            Lbl("   'Store everything' and 'Store all' keep equipped items, and:");
             GUILayout.BeginHorizontal();
             Toggle(VanillaPlusPlugin.StorageKeepArmor, "Armor");
             Toggle(VanillaPlusPlugin.StorageKeepWeapons, "Weapons");
@@ -179,7 +186,31 @@ namespace ValheimVanillaPlus
             if (Btn("Edit whitelist")) TextPrompt.EditSetting("Pickup whitelist: item names, commas between, * wildcard (Trophy*, *Ore)", VanillaPlusPlugin.PickupWhitelist);
             if (Btn("Edit blacklist")) TextPrompt.EditSetting("Pickup blacklist: item names, commas between, * wildcard (Trophy*, *Ore)", VanillaPlusPlugin.PickupBlacklist);
             GUILayout.EndHorizontal();
+
+            // Build the lists by clicking item icons instead of typing names.
+            if (Show("Pick items by icon"))
+            {
+                // Opening / closing takes effect on the next layout pass, so one frame's passes draw the same controls.
+                if (Event.current.type == EventType.Layout && _pickOpen != _pickOpenWanted)
+                {
+                    _pickOpen = _pickOpenWanted;
+                    if (_pickOpen) { _pickBlacklist = VanillaPlusPlugin.PickupFilterMode.Value == PickupFilterMode.Blacklist; _pickStatus = ""; }
+                }
+                _pickOpenWanted = GUILayout.Toggle(_pickOpenWanted, "Pick items by icon (click to add, click again to take out)");
+                if (_pickOpen)
+                {
+                    bool black = GUILayout.Toolbar(_pickBlacklist ? 1 : 0, new[] { "Add to / remove from whitelist", "Add to / remove from blacklist" }) == 1;
+                    if (black != _pickBlacklist) { _pickBlacklist = black; _pickStatus = ""; }
+                    bool white = !_pickBlacklist;
+                    ItemPicker.Draw(it => PickupFilter.InList(white, it.Prefab, it.Shown),
+                        it => _pickStatus = PickupFilter.Toggle(white, it.Prefab, it.Shown),
+                        white ? new Color(0.35f, 1f, 0.4f) : new Color(1f, 0.35f, 0.3f), _pickStatus);
+                }
+            }
         }
+
+        private static bool _pickOpen, _pickOpenWanted, _pickBlacklist;
+        private static string _pickStatus = "";
 
         private static void VisionTab()
         {
@@ -242,8 +273,7 @@ namespace ValheimVanillaPlus
             Toggle(VanillaPlusPlugin.SignEditorEnabled, "Sign editor: colors, bold / italic / size, icons while editing a sign");
             IntSlider(VanillaPlusPlugin.SignCharLimit, "   Character limit (game: 50)", 50, 500);
             Toggle(VanillaPlusPlugin.SignCustomIcons, "Item & map pin icons on signs (only seen by players with this mod)");
-            if (Btn("   Default sign color: " + (string.IsNullOrEmpty(VanillaPlusPlugin.SignDefaultColor.Value) ? "game default" : VanillaPlusPlugin.SignDefaultColor.Value) + "  (edit)"))
-                TextPrompt.EditSetting("Default sign color: hex (FFFFFF) or name (white, red, ...). Empty = game default", VanillaPlusPlugin.SignDefaultColor);
+            ColorPicker.Draw("Default sign color", VanillaPlusPlugin.SignDefaultColor, "game default");
         }
 
         private static void MoreTab()
@@ -317,8 +347,15 @@ namespace ValheimVanillaPlus
             float v = GUILayout.HorizontalSlider(entry.Value, min, max);
             GUILayout.EndHorizontal();
             v = Mathf.Round(v * 10f) / 10f;
-            if (!Mathf.Approximately(v, entry.Value)) entry.Value = v;
+            if (!Mathf.Approximately(v, entry.Value))
+            {
+                entry.Value = v;
+                if (IsDistance(label)) RangePreview.Show(v); // circle on the ground while dragging
+            }
         }
+
+        // Distance sliders are the ones labelled in meters: "Range (m)", "Chest range (m)", ...
+        private static bool IsDistance(string label) => label.Contains("(m)") || label.Contains("(m,");
 
         private static void IntSlider(ConfigEntry<int> entry, string label, int min, int max)
         {

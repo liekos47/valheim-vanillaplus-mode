@@ -227,7 +227,7 @@ namespace ValheimVanillaPlus
             GUILayout.Label($"{chests.Count} chest{(chests.Count == 1 ? "" : "s")} within", GUILayout.Width(110f));
             float r = GUILayout.HorizontalSlider(VanillaPlusPlugin.StorageRange.Value, 5f, 100f, GUILayout.Width(150f));
             r = Mathf.Round(r);
-            if (!Mathf.Approximately(r, VanillaPlusPlugin.StorageRange.Value)) { VanillaPlusPlugin.StorageRange.Value = r; Storage.Invalidate(); }
+            if (!Mathf.Approximately(r, VanillaPlusPlugin.StorageRange.Value)) { VanillaPlusPlugin.StorageRange.Value = r; Storage.Invalidate(); RangePreview.Show(r); }
             GUILayout.Label($"{r:0} m", GUILayout.Width(45f));
             GUILayout.FlexibleSpace();
             if (GUILayout.Button($"Close ({VanillaPlusPlugin.StorageKey.Value})", GUILayout.Width(90f))) IsOpen = false;

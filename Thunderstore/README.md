@@ -42,14 +42,27 @@ one theme. *Valheim* (default) uses the game's own font and the button, text-fie
 pictures of the game's "Enter text" box; *Dark* and *Light* are flat colors; *Classic* is Unity's
 gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep their own colors.
 
+| Classic | Dark | Light | Valheim |
+|---|---|---|---|
+| ![Classic theme](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/theme-classic.png) | ![Dark theme](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/theme-dark.png) | ![Light theme](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/theme-light.png) | ![Valheim theme](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/theme-valheim.png) |
+
 ## Features
 
 - **Clear button** – a "Clear" button in the game's "Enter text" box (signs, names, portal tags),
   left of Cancel, that empties the field and keeps it focused. `[Interface] ClearButton`, default on.
+
+  ![Clear button in the Enter text box](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-sign-clear-button.png)
+
 - **FPS counter** – frames per second in the top-left corner, averaged over half a second: green
   from 50, yellow from 25, red below. `[Interface] ShowFps`, default off (menu → Interface).
+
+  ![FPS counter and the Interface tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-show-fps.png)
+
 - **World seed** – menu → More shows the name, seed, seed number and generator version of the
   world you are in, with a "Copy seed to clipboard" button. Works on servers too (see How it works).
+
+  ![World seed in the More tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-more-ui.png)
+
 - **Sign editor** – while you edit a sign, a panel next to the text box gives buttons for what
   signs already understand but the game has no UI for: colors (palette, RGB sliders, hex), bold /
   italic / underline / strike / highlight, size, alignment, spacing, fonts, two-tone letters,
@@ -60,11 +73,21 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   - `CharacterLimit` (150) – tags use up characters, so the sign limit is raised from the game's 50.
   - `CustomIcons` (on) – item and map pin icons.
   - `DefaultColor` (empty) – color given to a confirmed sign that has none of its own.
+
+  ![Sign editor panel beside the Enter text box](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-sign-enter-ui.png)
+
+  ![Default sign color prompt](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/set-default-sign-color.png)
+
 - **Sign search** – menu → Interface → "Search nearby signs for text…": every sign within range
   whose text contains what you typed (any case, tags ignored; commas = any of several words) is
   marked for a few seconds with a rainbow box, a line from the bottom of the screen and its text.
   Visual and local only. `[Signs] SearchRadius` (60 m), `SearchHighlightSeconds` (10),
   `SearchText` (the last search).
+
+  | Search | Result |
+  |---|---|
+  | ![Sign search prompt](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-sign-search-ui.png) | ![Sign search result](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-sign-search-result-ui.png) |
+
 - **Craft search** – a search box above the crafting list (inventory, workbench, forge, ...) that
   filters the recipes by the item made or any ingredient, e.g. "bronze" or "copper". Only recipes
   the game already lists are shown; nothing is unlocked. Cleared when the inventory closes.
@@ -76,6 +99,9 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   wards are respected, and a chest another player has open is skipped. Menu → Crafting.
   `[Crafting] CraftFromChests` (off), `ChestRange` (30 m). Don't combine with another
   craft-from-containers mod; the menu warns if one is installed.
+
+  ![Crafting tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-crafting-ui.png)
+
 - **Storage window** (F2, or menu → Items) – every item in your nearby player-built chests (also
   carts and ship storage) as one list with icon, total and "in N chests". Search, category filter
   (Materials / Food & meads / Weapons & tools / Armor / Other), sort by name or count, range
@@ -92,6 +118,9 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   - Private chests and wards are respected; a chest another player has open is skipped.
   - `[Storage] Enabled` (on), `Range` (30 m), the `Keep…` rules, `NeverStore`, `PositionX` /
     `PositionY`; `[Hotkeys] ToggleStorage` (F2).
+
+  ![Items tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-items-ui.png)
+
 - **Batch click** – in the inventory screen, Left Alt + click an item with a chest open moves
   every stack of it to the other side; Left Alt + Shift + click drops every stack of it. A
   top-left message says how many stacks moved. Quest items are never touched, and equipped copies
@@ -113,17 +142,30 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   waypoint is added where you die. No teleport. Kept only in
   `BepInEx\config\liekos47.valheimvanillaplus.waypoints.txt`. `[Waypoints] Enabled` (on), `OnScreen`
   (on), `OnScreenRange` (0 = any distance), `MapPins` (on), `LastDeath` (on).
+
+  ![World tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-world-ui.png)
+
 - **Radar** – a round overlay showing creatures and players around you, turning with the camera:
   red = hostile, yellow = passive, green = tamed, purple = boss, blue = players (with names);
   ^ / v marks a dot more than 5 m above / below you. Menu → Vision. `[Radar] Enabled` (off),
   `Range` (60 m), `Size`, `Opacity`, `Corner`, `OffsetX` / `OffsetY`, `Mobs`, `Passive`,
   `Players`, `PlayerNames`.
+
+  | Radar | Settings |
+  |---|---|
+  | ![Radar overlay](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/radar-ui.png) | ![Vision tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-vision-ui.png) |
+
 - **Player stats** – menu → Stats: a read-only page of your character's numbers, worked out with
   the game's own formulas. Vitals (health, stamina, eitr, armor, movement penalty from gear, carry
   weight), regeneration per second, food eaten with time left, the equipped weapon (damage types,
   damage per hit range from your skill and buffs, stamina per attack, block and parry),
   resistances and weaknesses, active effects with time left, and measured combat from your real
   fighting (swings, hits and damage per second, biggest hit). No settings.
+
+  | Vitals, regeneration, food | Weapon, resistances, effects |
+  |---|---|
+  | ![Stats tab, top](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-stats-ui.png) | ![Stats tab, bottom](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-stats-ui-2.png) |
+
 - **Auto reconnect** – when a server session ends with "disconnected", the main menu shows a
   countdown box ("Disconnected — reconnecting in 8 s (attempt 1/10)") and joins the same server
   again with the same character. Cancel button or Esc stops it. The server password you typed is
@@ -133,3 +175,7 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
 - **Night vision** – see at night and in caves / crypts without a torch (Home, or menu → Vision).
   Fog is left as the game sets it. Visual and local only. `[NightVision] Enabled` (off),
   `Brightness` (0.6).
+
+  | Off | Brightness 0.5 | Brightness 1.0 |
+  |---|---|---|
+  | ![Night vision off](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-brightness-off.png) | ![Night vision at 0.5](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-brightness-0.5.png) | ![Night vision at 1.0](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/dark-brightness-full.png) |

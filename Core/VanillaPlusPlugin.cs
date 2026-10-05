@@ -33,7 +33,7 @@ namespace ValheimVanillaPlus
         internal static ConfigEntry<bool> RadarEnabled, RadarMobs, RadarPassive, RadarPlayers, RadarNames;
         internal static ConfigEntry<float> RadarRange, RadarSize, RadarOpacity, RadarOffsetX, RadarOffsetY;
         internal static ConfigEntry<RadarCorner> RadarPosition;
-        internal static ConfigEntry<bool> StorageEnabled, StorageKeepHotbar;
+        internal static ConfigEntry<bool> StorageEnabled, StorageKeepHotbar, StoreAllButton;
         internal static ConfigEntry<bool> StorageKeepArmor, StorageKeepWeapons, StorageKeepTools, StorageKeepFood, StorageKeepAmmo, StorageKeepTrophies;
         internal static ConfigEntry<float> StorageRange, StorageX, StorageY;
         internal static ConfigEntry<KeyboardShortcut> StorageKey;
@@ -49,7 +49,7 @@ namespace ValheimVanillaPlus
         internal static ConfigEntry<MenuThemeMode> MenuThemeSetting;
         internal static ConfigEntry<float> MenuX, MenuY;
         internal static ConfigEntry<KeyboardShortcut> MenuKey;
-        internal static ConfigEntry<bool> HotReloadEnabled;
+        internal static ConfigEntry<bool> HotReloadEnabled, RangePreviewEnabled;
 
         internal static BepInEx.Logging.ManualLogSource Log;
         private static VanillaPlusPlugin _instance;
@@ -79,6 +79,7 @@ namespace ValheimVanillaPlus
         internal static bool BatchTransferOn => BatchTransferEnabled.Value && !GodModeLoaded;
         internal static bool WaypointsOn => WaypointsEnabled.Value && !GodModeLoaded;
         internal static bool RadarOn => RadarEnabled.Value && !GodModeLoaded;
+        internal static bool StoreAllOn => StoreAllButton.Value && !GodModeLoaded;
         internal static bool StorageOn => StorageEnabled.Value && !GodModeLoaded;
         internal static bool NightVisionOn => NightVisionEnabled.Value && !GodModeLoaded;
 
@@ -174,6 +175,8 @@ namespace ValheimVanillaPlus
             StorageX = Config.Bind("Storage", "PositionX", 600f, "Window position (remembered).");
             StorageY = Config.Bind("Storage", "PositionY", 80f, "Window position (remembered).");
             StorageKeepHotbar = Config.Bind("Storage", "KeepHotbar", true, "'Store everything' never moves items from your hotbar (top row).");
+            StoreAllButton = Config.Bind("StoreAll", "Enabled", false,
+                "Show a 'Store all' button under an open chest. It keeps equipped items and follows the [Storage] Keep... rules and NeverStore list.");
             StorageKeepArmor = Config.Bind("Storage", "KeepArmor", true, "'Store everything' keeps armor, capes, belts and trinkets.");
             StorageKeepWeapons = Config.Bind("Storage", "KeepWeapons", true, "'Store everything' keeps weapons, bows and shields.");
             StorageKeepTools = Config.Bind("Storage", "KeepTools", true, "'Store everything' keeps tools (hammer, pickaxe, hoe, ...) and torches.");
@@ -199,6 +202,8 @@ namespace ValheimVanillaPlus
             MenuThemeSetting = Config.Bind("Menu", "Theme", MenuThemeMode.Valheim, "Look of the menu, windows and buttons: Valheim (the game's own font, buttons and panels), Dark, Light or Classic (Unity gray).");
             MenuX = Config.Bind("Menu", "X", 40f, "Menu position (left edge, pixels). Saved when you drag the menu.");
             MenuY = Config.Bind("Menu", "Y", 80f, "Menu position (top edge, pixels). Saved when you drag the menu.");
+
+            RangePreviewEnabled = Config.Bind("Menu", "RangePreview", true, "Show a circle on the ground while dragging a distance slider in the menu or the storage window.");
 
             HotReloadEnabled = Config.Bind("General", "HotReload", true,
                 "Load a new build of this plugin as soon as it is copied into BepInEx/plugins, without restarting the game.");
@@ -284,10 +289,12 @@ namespace ValheimVanillaPlus
                 Safe("Waypoints", Waypoints.Draw);
                 Safe("Radar", Radar.Draw);
             }
+            if (Event.current.type == EventType.Repaint) Safe("RangePreview", RangePreview.Draw);
 
             // Everything you click or type in (buttons, search boxes, panels, windows) uses the menu theme.
             if (theme != null) GUI.skin = theme;
             Safe("AutoReconnect", AutoReconnect.Draw);
+            Safe("StoreAll", StoreAll.DrawButton);
             Safe("CraftSearch", CraftSearch.Draw);
             Safe("SignEditor", SignEditor.Draw);
             Safe("Menu", MenuWindow.Draw);
