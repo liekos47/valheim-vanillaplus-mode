@@ -3,14 +3,14 @@ using UnityEngine;
 
 namespace ValheimVanillaPlus
 {
-    // While the menu's search box has keyboard focus, the game's own key/button reads return false,
+    // While one of the mod's search boxes (menu, crafting list, storage window) has keyboard focus, the game's own key/button reads return false,
     // so typing "m" doesn't open the map, "tab" the inventory, etc. Mouse input is left alone.
     // (One small patch class per method: the safe, standard Harmony form.)
     internal static class SearchInputBlock
     {
         public static bool Block(ref bool result)
         {
-            if (!MenuWindow.Typing) return true;
+            if (!MenuWindow.Typing && !CraftSearch.Typing && !StorageWindow.Typing) return true;
             result = false;
             return false;
         }

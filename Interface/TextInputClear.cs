@@ -23,6 +23,15 @@ namespace ValheimVanillaPlus
             catch (System.Exception e) { VanillaPlusPlugin.Log.LogWarning($"Clear button: {e.Message}"); }
         }
 
+        // Hot reload: the next build makes its own button.
+        public static void Cleanup()
+        {
+            var panel = TextInput.instance != null ? TextInput.instance.m_panel : null;
+            if (panel == null) return;
+            foreach (var b in panel.GetComponentsInChildren<Button>(true))
+                if (b.name == ButtonName) Object.Destroy(b.gameObject);
+        }
+
         private static void Ensure(TextInput ti)
         {
             var all = ti.m_panel.GetComponentsInChildren<Button>(true);
