@@ -1,0 +1,14 @@
+# Notes and handovers stay local (no markdown other than README, no sensitive details on GitHub).
+HANDOVER.md
+NOTES*.md
+*-notes.md
+
+# Local tool settings.
+.claude/
+
+# Build output
+bin/
+obj/
+*.zip
+*.user
+.vs/
