@@ -199,12 +199,13 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
   game's own five map pin icons; click the icon button in its row to switch to the next. Shown on
   screen as that icon with name and distance, and as map pins that are not saved to your
   character. A "Last death" waypoint (the game's death marker) is added where you die. With
-  "also show markers for the pins I place on the map" (`MapPinMarkers`, off by default), the
-  pins you add on the game's own map get the same on-screen markers: tick which of the five
-  icons count, and cross a pin out on the map to hide its marker. Those pins are only read; pins
-  shared from a cartography table are left out. No teleport. Kept only in
+  "also show markers for the pins I place on the map", the pins you add on the game's own map
+  get the same on-screen markers: tick which of the five icons count, and cross a pin out on the
+  map to hide its marker. Those pins are only read; pins shared from a cartography table are
+  left out. No teleport. Kept only in
   `BepInEx\config\liekos47.valheimvanillaplus.waypoints.txt`. `[Waypoints] Enabled` (on), `OnScreen`
-  (on), `OnScreenRange` (0 = any distance), `MapPins` (on), `LastDeath` (on).
+  (on), `OnScreenRange` (0 = any distance), `MapPins` (on), `LastDeath` (on), `MapPinMarkers`
+  (off), `MapPinMarkerIcons` (all five).
 
   ![World tab](https://raw.githubusercontent.com/liekos47/valheim-vanillaplus-mode/main/Screenshots/1.0/dark-world-ui.png)
 
