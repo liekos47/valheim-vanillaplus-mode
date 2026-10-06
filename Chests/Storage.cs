@@ -152,6 +152,8 @@ namespace ValheimVanillaPlus
         private const int WindowId = 0x7A92;
         private const string SearchControl = "vanillaplus_storagesearch";
         private static Rect _rect = new Rect(600f, 80f, 600f, 640f);
+        private static Vector2 _size = new Vector2(600f, 680f); // set with the grip in the bottom-right corner
+        private static readonly Vector2 MinSize = new Vector2(520f, 300f);
         private static bool _placed, _moved;
         private static Vector2 _scroll;
         private static string _search = "";
@@ -189,6 +191,8 @@ namespace ValheimVanillaPlus
             if (!_placed)
             {
                 _placed = true;
+                _size = new Vector2(Mathf.Max(MinSize.x, VanillaPlusPlugin.StorageWidth.Value), Mathf.Max(MinSize.y, VanillaPlusPlugin.StorageHeight.Value));
+                _rect.width = _size.x;
                 _rect.x = Mathf.Clamp(VanillaPlusPlugin.StorageX.Value, 0f, Mathf.Max(0f, Screen.width - _rect.width));
                 _rect.y = Mathf.Clamp(VanillaPlusPlugin.StorageY.Value, 0f, Mathf.Max(0f, Screen.height - 200f));
             }
@@ -201,7 +205,9 @@ namespace ValheimVanillaPlus
                 _rich = new GUIStyle(GUI.skin.label) { richText = true };
                 _count = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight, fontStyle = FontStyle.Bold };
             }
-            _rect.height = Mathf.Min(680f, Screen.height - _rect.y - 20f);
+            // The size is the one you dragged it to with the corner grip.
+            _rect.width = _size.x;
+            _rect.height = Mathf.Min(_size.y, Screen.height - _rect.y - 20f);
             var before = _rect.position;
             _rect = GUILayout.Window(WindowId, _rect, Contents, "Storage — all nearby chests");
             if (_rect.position != before) _moved = true;
@@ -221,6 +227,11 @@ namespace ValheimVanillaPlus
         {
             var p = Player.m_localPlayer;
             if (p == null) return;
+            if (WindowResize.Handle(WindowId, _rect, ref _size, MinSize, new Vector2(Screen.width - _rect.x - 4f, Screen.height - _rect.y - 4f)))
+            {
+                VanillaPlusPlugin.StorageWidth.Value = Mathf.Round(_size.x);
+                VanillaPlusPlugin.StorageHeight.Value = Mathf.Round(_size.y);
+            }
             var chests = Storage.Chests(p);
 
             GUILayout.BeginHorizontal();
@@ -264,6 +275,7 @@ namespace ValheimVanillaPlus
             GUILayout.EndScrollView();
 
             GUILayout.Label(Time.unscaledTime < _statusUntil ? _status : $"{rows.Count} item type{(rows.Count == 1 ? "" : "s")}");
+            WindowResize.Draw(_rect);
             GUI.DragWindow();
         }
 

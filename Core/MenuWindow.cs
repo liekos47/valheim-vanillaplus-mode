@@ -1,4 +1,5 @@
 using BepInEx.Configuration;
+using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ namespace ValheimVanillaPlus
 
         private const int WindowId = 0x7A91;
         private static Rect _rect = new Rect(40f, 80f, 520f, 0f);
+        private static Vector2 _size = new Vector2(520f, 620f); // set with the grip in the bottom-right corner
+        private static readonly Vector2 MinSize = new Vector2(440f, 300f);
         private static Vector2 _scroll;
         private static GUIStyle _header;
 
@@ -29,6 +32,8 @@ namespace ValheimVanillaPlus
             if (!_placed)
             {
                 _placed = true;
+                _size = new Vector2(Mathf.Max(MinSize.x, VanillaPlusPlugin.MenuWidth.Value), Mathf.Max(MinSize.y, VanillaPlusPlugin.MenuHeight.Value));
+                _rect.width = _size.x;
                 _rect.x = Mathf.Clamp(VanillaPlusPlugin.MenuX.Value, 0f, Mathf.Max(0f, Screen.width - _rect.width));
                 _rect.y = Mathf.Clamp(VanillaPlusPlugin.MenuY.Value, 0f, Mathf.Max(0f, Screen.height - 200f));
             }
@@ -42,8 +47,11 @@ namespace ValheimVanillaPlus
                 _header = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold, fontSize = 14 };
             }
 
+            // The size is the one you dragged it to with the corner grip (never taller than the screen
+            // allows; the window itself won't go smaller than its contents need).
             var before = _rect.position;
-            _rect.height = Mathf.Min(620f, Screen.height - _rect.y - 20f);
+            _rect.width = _size.x;
+            _rect.height = Mathf.Min(_size.y, Screen.height - _rect.y - 20f);
             _rect = GUILayout.Window(WindowId, _rect, DrawContents, $"{VanillaPlusPlugin.Name} {VanillaPlusPlugin.Version}");
             if (_rect.position != before) _moved = true;
             if (_moved && Event.current.rawType == EventType.MouseUp) SavePosition();
@@ -61,6 +69,12 @@ namespace ValheimVanillaPlus
 
         private static void DrawContents(int id)
         {
+            if (WindowResize.Handle(WindowId, _rect, ref _size, MinSize, new Vector2(Screen.width - _rect.x - 4f, Screen.height - _rect.y - 4f)))
+            {
+                VanillaPlusPlugin.MenuWidth.Value = Mathf.Round(_size.x);
+                VanillaPlusPlugin.MenuHeight.Value = Mathf.Round(_size.y);
+            }
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Theme:", GUILayout.Width(55f));
             int themeSel = GUILayout.Toolbar((int)VanillaPlusPlugin.MenuThemeSetting.Value, new[] { "Classic", "Dark", "Light", "Valheim" });
@@ -74,13 +88,7 @@ namespace ValheimVanillaPlus
             _search = GUILayout.TextField(_search ?? "", 40);
             if (GUILayout.Button("✕", GUILayout.Width(28f))) { _search = ""; GUI.FocusControl(null); }
             GUILayout.EndHorizontal();
-            if (Event.current.type == EventType.Repaint)
-            {
-                string focused = GUI.GetNameOfFocusedControl();
-                Typing = focused == SearchControl || focused == ItemPicker.Control || focused == ColorPicker.Control;
-            }
-
-            Toggle(VanillaPlusPlugin.RangePreviewEnabled, "Show a circle on the ground when dragging a range slider");
+            if (Event.current.type == EventType.Repaint) Typing = GUI.GetNameOfFocusedControl() == SearchControl || HotkeyEditor.Busy;
 
             if (!Searching)
             {
@@ -98,6 +106,7 @@ namespace ValheimVanillaPlus
             GUILayout.EndScrollView();
 
             if (GUILayout.Button($"Close ({VanillaPlusPlugin.MenuKey.Value})")) IsOpen = false;
+            WindowResize.Draw(_rect);
             GUI.DragWindow();
         }
 
@@ -111,7 +120,7 @@ namespace ValheimVanillaPlus
                 case 2: ItemsTab(); break;
                 case 3: VisionTab(); break;
                 case 4: WorldTab(); break;
-                case 5: if (Show(null)) PlayerStats.Draw(Player.m_localPlayer); break;
+                case 5: if (Show(null)) { PlayerStats.Draw(Player.m_localPlayer); DeathLog.DrawMenu(); } break;
                 case 6: MoreTab(); break;
             }
         }
@@ -119,6 +128,10 @@ namespace ValheimVanillaPlus
         private static void WorldTab()
         {
             var player = Player.m_localPlayer;
+            Header("Map");
+            if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its map reveal is used instead of this one.");
+            Toggle(VanillaPlusPlugin.RevealMap, "Reveal the whole world map (removes the map fog; not saved)");
+
             Header("Waypoints");
             if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its waypoints are used instead of these.");
             Toggle(VanillaPlusPlugin.WaypointsEnabled, "Waypoints");
@@ -126,6 +139,17 @@ namespace ValheimVanillaPlus
             Slider(VanillaPlusPlugin.WaypointRange, "   On-screen range (m, 0 = any)", 0f, 5000f, "0");
             Toggle(VanillaPlusPlugin.WaypointMapPins, "   ...show as map pins (not saved)");
             Toggle(VanillaPlusPlugin.WaypointDeath, "   ...add a 'Last death' waypoint when I die");
+            Toggle(VanillaPlusPlugin.WaypointPinMarkers, "   ...also show markers for the pins I place on the map");
+            if (Show("pins I place on the map"))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("      for these pin icons:", GUILayout.Width(170f));
+                foreach (var icon in Waypoints.Icons)
+                    if (IconButton(Waypoints.PinSprite(icon), Waypoints.MarkerIcon(icon), "")) Waypoints.ToggleMarkerIcon(icon);
+                GUILayout.Label(VanillaPlusPlugin.WaypointPinMarkers.Value ? $"  {Waypoints.MarkerPinCount()} pins shown" : "");
+                GUILayout.EndHorizontal();
+                Lbl("      Cross a pin out on the map to hide its marker.");
+            }
             if (player != null && Btn("Add waypoint here")) Waypoints.AddHere(player);
             if (player != null && Show(null))
             {
@@ -133,13 +157,44 @@ namespace ValheimVanillaPlus
                 {
                     float d = Vector3.Distance(player.transform.position, w.Pos);
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label($"   {w.Name}  ({d:0} m {WorldInfo.Compass(player.transform.position, w.Pos)})", GUILayout.Width(250f));
+                    // The waypoint's map pin icon: click to switch to the next of the game's five.
+                    bool death = Waypoints.IsDeath(w);
+                    if (IconButton(Waypoints.PinSprite(death ? Minimap.PinType.Death : w.Icon), false, death ? "" : "Click for the next pin icon") && !death)
+                        Waypoints.NextIcon(w);
+                    GUILayout.Label($"{w.Name}  ({d:0} m {WorldInfo.Compass(player.transform.position, w.Pos)})", GUILayout.Width(220f));
                     if (GUILayout.Button("Map")) Waypoints.ShowOnMap(w);
                     if (GUILayout.Button("Rename")) Waypoints.Rename(w);
                     if (GUILayout.Button("Delete")) Waypoints.Delete(w);
                     GUILayout.EndHorizontal();
                 }
             }
+        }
+
+        // A small button showing one of the game's pictures; framed when `on`.
+        private static bool IconButton(Sprite sprite, bool on, string tip)
+        {
+            var r = GUILayoutUtility.GetRect(28f, 26f, GUILayout.Width(28f), GUILayout.Height(26f));
+            bool clicked = GUI.Button(r, new GUIContent("", tip));
+            if (Event.current.type == EventType.Repaint)
+            {
+                if (sprite != null && sprite.texture != null)
+                {
+                    var tr = sprite.textureRect; var tex = sprite.texture;
+                    GUI.DrawTextureWithTexCoords(new Rect(r.x + 4f, r.y + 3f, 20f, 20f), tex,
+                        new Rect(tr.x / tex.width, tr.y / tex.height, tr.width / tex.width, tr.height / tex.height));
+                }
+                if (on)
+                {
+                    var old = GUI.color; GUI.color = new Color(0.35f, 1f, 0.4f);
+                    var t = Texture2D.whiteTexture;
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, r.width, 2f), t);
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMax - 2f, r.width, 2f), t);
+                    GUI.DrawTexture(new Rect(r.xMin, r.yMin, 2f, r.height), t);
+                    GUI.DrawTexture(new Rect(r.xMax - 2f, r.yMin, 2f, r.height), t);
+                    GUI.color = old;
+                }
+            }
+            return clicked;
         }
 
         private static void ItemsTab()
@@ -167,13 +222,22 @@ namespace ValheimVanillaPlus
             GUILayout.EndHorizontal();
             Toggle(VanillaPlusPlugin.StorageKeepHotbar, "   Hotbar (top row)");
             Lbl($"   Never store: {(string.IsNullOrEmpty(VanillaPlusPlugin.StorageNeverStore.Value) ? "(none)" : VanillaPlusPlugin.StorageNeverStore.Value)}");
-            if (Btn("   Edit never-store list")) TextPrompt.EditSetting("Never store: item names, commas between, * wildcard (e.g. Coins, *Mead*, Wishbone)", VanillaPlusPlugin.StorageNeverStore);
+            if (Btn("   Edit never-store list")) ItemPicker.Open("Never store: item names, commas between, * wildcard (e.g. Coins, *Mead*, Wishbone)", VanillaPlusPlugin.StorageNeverStore, new Color(1f, 0.8f, 0.25f), true);
 
             Header("Repair alert");
             if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its repair alert is used instead of this one.");
             Toggle(VanillaPlusPlugin.RepairAlertEnabled, "Repair alert (equipped gear low / broken)");
             Slider(VanillaPlusPlugin.RepairAlertPercent, "   Warn below %", 5f, 75f, "0");
             Slider(VanillaPlusPlugin.RepairAlertRepeatMinutes, "   Remind every (min, 0 = once)", 0f, 30f, "0");
+
+            Header("Food alert");
+            if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its food alert is used instead of this one.");
+            Toggle(VanillaPlusPlugin.FoodAlertEnabled, "Food alert (a food is about to run out / has run out)");
+            Slider(VanillaPlusPlugin.FoodAlertMinutes, "   Warn below (min)", 0.5f, 10f);
+            Toggle(VanillaPlusPlugin.FoodAlertEatAgain, "   ...note when a food can be eaten again");
+            Toggle(VanillaPlusPlugin.FoodAlertEmptySlot, "   ...note when a food slot is empty");
+            Slider(VanillaPlusPlugin.FoodAlertRepeatMinutes, "   Remind every (min, 0 = once)", 0f, 30f, "0");
+            Toggle(VanillaPlusPlugin.FoodAlertQuietWhenSafe, "   ...stay quiet while resting or indoors at a base");
 
             Header("Auto-pickup filter");
             if (VanillaPlusPlugin.GodModeLoaded) Lbl("Valheim God Mode is installed: its pickup filter is used instead of this one.");
@@ -183,34 +247,11 @@ namespace ValheimVanillaPlus
             if (mode != (int)VanillaPlusPlugin.PickupFilterMode.Value) VanillaPlusPlugin.PickupFilterMode.Value = (PickupFilterMode)mode;
             Lbl(PickupFilter.Summary());
             GUILayout.BeginHorizontal();
-            if (Btn("Edit whitelist")) TextPrompt.EditSetting("Pickup whitelist: item names, commas between, * wildcard (Trophy*, *Ore)", VanillaPlusPlugin.PickupWhitelist);
-            if (Btn("Edit blacklist")) TextPrompt.EditSetting("Pickup blacklist: item names, commas between, * wildcard (Trophy*, *Ore)", VanillaPlusPlugin.PickupBlacklist);
+            // The text box opens with a grid of item icons beside it: click icons instead of typing names.
+            if (Btn("Edit whitelist")) ItemPicker.Open("Pickup whitelist: item names, commas between, * wildcard (Trophy*, *Ore)", VanillaPlusPlugin.PickupWhitelist, new Color(0.35f, 1f, 0.4f), true);
+            if (Btn("Edit blacklist")) ItemPicker.Open("Pickup blacklist: item names, commas between, * wildcard (Trophy*, *Ore)", VanillaPlusPlugin.PickupBlacklist, new Color(1f, 0.35f, 0.3f), true);
             GUILayout.EndHorizontal();
-
-            // Build the lists by clicking item icons instead of typing names.
-            if (Show("Pick items by icon"))
-            {
-                // Opening / closing takes effect on the next layout pass, so one frame's passes draw the same controls.
-                if (Event.current.type == EventType.Layout && _pickOpen != _pickOpenWanted)
-                {
-                    _pickOpen = _pickOpenWanted;
-                    if (_pickOpen) { _pickBlacklist = VanillaPlusPlugin.PickupFilterMode.Value == PickupFilterMode.Blacklist; _pickStatus = ""; }
-                }
-                _pickOpenWanted = GUILayout.Toggle(_pickOpenWanted, "Pick items by icon (click to add, click again to take out)");
-                if (_pickOpen)
-                {
-                    bool black = GUILayout.Toolbar(_pickBlacklist ? 1 : 0, new[] { "Add to / remove from whitelist", "Add to / remove from blacklist" }) == 1;
-                    if (black != _pickBlacklist) { _pickBlacklist = black; _pickStatus = ""; }
-                    bool white = !_pickBlacklist;
-                    ItemPicker.Draw(it => PickupFilter.InList(white, it.Prefab, it.Shown),
-                        it => _pickStatus = PickupFilter.Toggle(white, it.Prefab, it.Shown),
-                        white ? new Color(0.35f, 1f, 0.4f) : new Color(1f, 0.35f, 0.3f), _pickStatus);
-                }
-            }
         }
-
-        private static bool _pickOpen, _pickOpenWanted, _pickBlacklist;
-        private static string _pickStatus = "";
 
         private static void VisionTab()
         {
@@ -273,11 +314,16 @@ namespace ValheimVanillaPlus
             Toggle(VanillaPlusPlugin.SignEditorEnabled, "Sign editor: colors, bold / italic / size, icons while editing a sign");
             IntSlider(VanillaPlusPlugin.SignCharLimit, "   Character limit (game: 50)", 50, 500);
             Toggle(VanillaPlusPlugin.SignCustomIcons, "Item & map pin icons on signs (only seen by players with this mod)");
-            ColorPicker.Draw("Default sign color", VanillaPlusPlugin.SignDefaultColor, "game default");
+            if (Btn("   Default sign color: " + (string.IsNullOrEmpty(VanillaPlusPlugin.SignDefaultColor.Value) ? "game default" : VanillaPlusPlugin.SignDefaultColor.Value) + "  (edit)"))
+                ColorPicker.Open("Default sign color: hex (FFFFFF) or name (white, red, ...). Empty = game default", VanillaPlusPlugin.SignDefaultColor, "game default");
         }
 
         private static void MoreTab()
         {
+            Header("General");
+            Toggle(VanillaPlusPlugin.RangePreviewEnabled, "Show a circle on the ground when dragging a range slider");
+            if (Show("Hotkeys")) HotkeyEditor.Draw(VanillaPlusPlugin.Settings);
+
             // The server sends its world's name, seed and generator version to every client on join
             // (ZNet.RPC_PeerInfo), because the client builds the terrain itself. Nothing is guessed.
             Header("World seed");
@@ -306,9 +352,51 @@ namespace ValheimVanillaPlus
             if (Btn("Reload config file")) VanillaPlusPlugin.ReloadConfig();
             GUILayout.EndHorizontal();
 
+            Header("Config backups");
+            Lbl("A backup holds your settings, your waypoints and your death history. Import replaces all three with the backup's, after saving what you have now as a \"_before-import\" backup.");
+            var player = Player.m_localPlayer;
+            GUILayout.BeginHorizontal();
+            if (Btn("Save current config as a backup"))
+            {
+                string name = ConfigBackup.Export();
+                player?.Message(MessageHud.MessageType.Center, $"Config exported: {name}");
+            }
+            if (Btn("Open backup folder")) ConfigBackup.OpenFolder();
+            GUILayout.EndHorizontal();
+
+            // The list is refreshed on the layout pass only, so a click that adds or removes a backup
+            // doesn't change the rows halfway through a frame.
+            if (Event.current.type == EventType.Layout) _backups = ConfigBackup.Exports().Take(10).ToList();
+            if (Show(null))
+            {
+                if (_backups.Count == 0) GUILayout.Label("   No backups yet.");
+                foreach (string name in _backups)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("   " + name + (ConfigBackup.HasWaypoints(name) ? "" : "  (settings only)"), GUILayout.Width(250f));
+                    if (GUILayout.Button("Import"))
+                    {
+                        string saved = ConfigBackup.Import(name);
+                        if (saved != null) player?.Message(MessageHud.MessageType.Center, $"Config imported: {name}\nWhat you had is saved as {saved}");
+                    }
+                    // Delete asks once more: the second click within 4 s removes the backup for good.
+                    bool armed = _deleteArmed == name && Time.unscaledTime - _deleteArmedAt < 4f;
+                    if (GUILayout.Button(armed ? "Really delete?" : "Delete", GUILayout.Width(110f)))
+                    {
+                        if (armed) { ConfigBackup.Delete(name); _deleteArmed = null; }
+                        else { _deleteArmed = name; _deleteArmedAt = Time.unscaledTime; }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+
             Header("Development");
             Toggle(VanillaPlusPlugin.HotReloadEnabled, "Hot reload: load a new build without restarting the game");
         }
+
+        private static System.Collections.Generic.List<string> _backups = new System.Collections.Generic.List<string>();
+        private static string _deleteArmed;
+        private static float _deleteArmedAt;
 
         private const string SearchControl = "vanillaplus_search";
         private static string _search = "";

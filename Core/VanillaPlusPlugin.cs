@@ -13,7 +13,7 @@ namespace ValheimVanillaPlus
     {
         public const string Guid = "liekos47.valheimvanillaplus";
         public const string Name = "Valheim Vanilla Plus";
-        public const string Version = "0.1.0";
+        public const string Version = "1.0.0";
 
         internal static ConfigEntry<bool> TextClearButton, ShowFps;
         internal static ConfigEntry<bool> CraftSearchEnabled;
@@ -21,6 +21,9 @@ namespace ValheimVanillaPlus
         internal static ConfigEntry<string> PickupWhitelist, PickupBlacklist;
         internal static ConfigEntry<bool> RepairAlertEnabled;
         internal static ConfigEntry<float> RepairAlertPercent, RepairAlertRepeatMinutes;
+        internal static ConfigEntry<bool> FoodAlertEnabled, FoodAlertEatAgain, FoodAlertEmptySlot, FoodAlertQuietWhenSafe;
+        internal static ConfigEntry<float> FoodAlertMinutes, FoodAlertRepeatMinutes;
+        internal static ConfigEntry<bool> DeathLogEnabled;
         internal static ConfigEntry<bool> AutoReconnectEnabled;
         internal static ConfigEntry<float> AutoReconnectDelay;
         internal static ConfigEntry<int> AutoReconnectMaxAttempts;
@@ -28,7 +31,8 @@ namespace ValheimVanillaPlus
         internal static ConfigEntry<float> CraftChestRange;
         internal static ConfigEntry<bool> BatchTransferEnabled;
         internal static ConfigEntry<KeyCode> BatchMoveKey;
-        internal static ConfigEntry<bool> WaypointsEnabled, WaypointOnScreen, WaypointMapPins, WaypointDeath;
+        internal static ConfigEntry<bool> WaypointsEnabled, WaypointOnScreen, WaypointMapPins, WaypointDeath, WaypointPinMarkers;
+        internal static ConfigEntry<string> WaypointPinMarkerIcons;
         internal static ConfigEntry<float> WaypointRange;
         internal static ConfigEntry<bool> RadarEnabled, RadarMobs, RadarPassive, RadarPlayers, RadarNames;
         internal static ConfigEntry<float> RadarRange, RadarSize, RadarOpacity, RadarOffsetX, RadarOffsetY;
@@ -47,9 +51,9 @@ namespace ValheimVanillaPlus
         internal static ConfigEntry<string> SignSearchText;
         internal static ConfigEntry<float> SignSearchRadius, SignSearchSeconds;
         internal static ConfigEntry<MenuThemeMode> MenuThemeSetting;
-        internal static ConfigEntry<float> MenuX, MenuY;
+        internal static ConfigEntry<float> MenuX, MenuY, MenuWidth, MenuHeight, StorageWidth, StorageHeight;
         internal static ConfigEntry<KeyboardShortcut> MenuKey;
-        internal static ConfigEntry<bool> HotReloadEnabled, RangePreviewEnabled;
+        internal static ConfigEntry<bool> HotReloadEnabled, RangePreviewEnabled, RevealMap;
 
         internal static BepInEx.Logging.ManualLogSource Log;
         private static VanillaPlusPlugin _instance;
@@ -74,9 +78,12 @@ namespace ValheimVanillaPlus
         internal static bool CraftSearchOn => CraftSearchEnabled.Value && !GodModeLoaded;
         internal static bool ShowFpsOn => ShowFps.Value && !GodModeLoaded;
         internal static bool RepairAlertOn => RepairAlertEnabled.Value && !GodModeLoaded;
+        internal static bool FoodAlertOn => FoodAlertEnabled.Value && !GodModeLoaded;
+        internal static bool DeathLogOn => DeathLogEnabled.Value && !GodModeLoaded;
         internal static bool AutoReconnectOn => AutoReconnectEnabled.Value && !GodModeLoaded;
         internal static bool CraftFromChestsOn => CraftFromChestsEnabled.Value && !GodModeLoaded;
         internal static bool BatchTransferOn => BatchTransferEnabled.Value && !GodModeLoaded;
+        internal static bool RevealMapOn => RevealMap.Value && !GodModeLoaded;
         internal static bool WaypointsOn => WaypointsEnabled.Value && !GodModeLoaded;
         internal static bool RadarOn => RadarEnabled.Value && !GodModeLoaded;
         internal static bool StoreAllOn => StoreAllButton.Value && !GodModeLoaded;
@@ -102,6 +109,10 @@ namespace ValheimVanillaPlus
                 Player.m_localPlayer?.Message(MessageHud.MessageType.Center, "Couldn't open the config file (see log)");
             }
         }
+
+        internal static string ConfigFilePath => _instance.Config.ConfigFilePath;
+        internal static void SaveConfig() => _instance.Config.Save();
+        internal static ConfigFile Settings => _instance.Config;
 
         internal static void ReloadConfig()
         {
@@ -136,6 +147,16 @@ namespace ValheimVanillaPlus
             RepairAlertPercent = Config.Bind("RepairAlert", "BelowPercent", 20f, "Warn below this durability %.");
             RepairAlertRepeatMinutes = Config.Bind("RepairAlert", "RepeatMinutes", 5f, "Remind (top-left) every N minutes while something is still low. 0 = only once.");
 
+            FoodAlertEnabled = Config.Bind("FoodAlert", "Enabled", true, "Warn when a food you have eaten is about to run out, and when it has.");
+            FoodAlertMinutes = Config.Bind("FoodAlert", "WarnBelowMinutes", 2f, "Warn when a food has less than this many minutes left.");
+            FoodAlertEatAgain = Config.Bind("FoodAlert", "CanEatAgain", true, "Show a top-left note when the game would let you eat a food again.");
+            FoodAlertEmptySlot = Config.Bind("FoodAlert", "EmptySlot", false, "Show a top-left note when fewer than three foods are active.");
+            FoodAlertRepeatMinutes = Config.Bind("FoodAlert", "RepeatMinutes", 5f, "Remind (top-left) every N minutes while a food is low or a slot is empty. 0 = only once.");
+            FoodAlertQuietWhenSafe = Config.Bind("FoodAlert", "QuietWhenSafe", true, "No food messages while you are resting or indoors at a base; what still applies is said when you leave.");
+
+            DeathLogEnabled = Config.Bind("DeathLog", "Enabled", true, "Record how you die: the cause, the last hits before it, and a history kept in a local file.");
+            DeathLog.Load();
+
             AutoReconnectEnabled = Config.Bind("AutoReconnect", "Enabled", false,
                 "When a server session ends with 'disconnected', join the same server again from the main menu after a countdown. Never after a kick or ban.");
             AutoReconnectDelay = Config.Bind("AutoReconnect", "DelaySeconds", 10f, "Wait before each attempt (min 3 s).");
@@ -154,7 +175,10 @@ namespace ValheimVanillaPlus
             WaypointOnScreen = Config.Bind("Waypoints", "OnScreen", true, "Show waypoints on screen with name and distance (through walls).");
             WaypointMapPins = Config.Bind("Waypoints", "MapPins", true, "Show waypoints as map pins (not saved to your character).");
             WaypointDeath = Config.Bind("Waypoints", "LastDeath", true, "Add / move a 'Last death' waypoint where you die.");
+            RevealMap = Config.Bind("Map", "RevealMap", false, "Show the whole world map by removing the fog over it. Visual only: your real explored map is not changed or saved.");
             WaypointRange = Config.Bind("Waypoints", "OnScreenRange", 0f, "Only show on-screen markers within this distance (0 = any distance).");
+            WaypointPinMarkers = Config.Bind("Waypoints", "MapPinMarkers", false, "Also show on-screen markers (icon, name, distance) for the pins you place on the game's own map. Cross a pin out on the map to hide its marker.");
+            WaypointPinMarkerIcons = Config.Bind("Waypoints", "MapPinMarkerIcons", "Icon0, Icon1, Icon2, Icon3, Icon4", "Which of the game's five pin icons get a marker with MapPinMarkers (Icon0 - Icon4, in the order the map shows them).");
             Waypoints.Load();
 
             RadarEnabled = Config.Bind("Radar", "Enabled", false, "Round radar overlay of nearby creatures and players (turns with the camera).");
@@ -174,6 +198,8 @@ namespace ValheimVanillaPlus
             StorageKey = Config.Bind("Hotkeys", "ToggleStorage", new KeyboardShortcut(KeyCode.F2), "Open / close the Storage window.");
             StorageX = Config.Bind("Storage", "PositionX", 600f, "Window position (remembered).");
             StorageY = Config.Bind("Storage", "PositionY", 80f, "Window position (remembered).");
+            StorageWidth = Config.Bind("Storage", "Width", 600f, "Window width (pixels). Saved when you drag the grip in its bottom-right corner.");
+            StorageHeight = Config.Bind("Storage", "Height", 680f, "Window height (pixels). Saved when you drag the grip in its bottom-right corner.");
             StorageKeepHotbar = Config.Bind("Storage", "KeepHotbar", true, "'Store everything' never moves items from your hotbar (top row).");
             StoreAllButton = Config.Bind("StoreAll", "Enabled", false,
                 "Show a 'Store all' button under an open chest. It keeps equipped items and follows the [Storage] Keep... rules and NeverStore list.");
@@ -202,6 +228,8 @@ namespace ValheimVanillaPlus
             MenuThemeSetting = Config.Bind("Menu", "Theme", MenuThemeMode.Valheim, "Look of the menu, windows and buttons: Valheim (the game's own font, buttons and panels), Dark, Light or Classic (Unity gray).");
             MenuX = Config.Bind("Menu", "X", 40f, "Menu position (left edge, pixels). Saved when you drag the menu.");
             MenuY = Config.Bind("Menu", "Y", 80f, "Menu position (top edge, pixels). Saved when you drag the menu.");
+            MenuWidth = Config.Bind("Menu", "Width", 520f, "Menu width (pixels). Saved when you drag the grip in its bottom-right corner.");
+            MenuHeight = Config.Bind("Menu", "Height", 620f, "Menu height (pixels). Saved when you drag the grip in its bottom-right corner.");
 
             RangePreviewEnabled = Config.Bind("Menu", "RangePreview", true, "Show a circle on the ground while dragging a distance slider in the menu or the storage window.");
 
@@ -226,6 +254,7 @@ namespace ValheimVanillaPlus
             Safe("ClearButton cleanup", TextInputClear.Cleanup);
             Safe("SignIcons cleanup", SignIcons.Cleanup);
             Safe("Waypoints cleanup", Waypoints.Cleanup);
+            Safe("MapReveal cleanup", MapReveal.Cleanup);
             // Unpatch now and forget the instance: this component is destroyed at the end of the frame,
             // after the next build has patched under the same Harmony id, and OnDestroy must not strip those.
             _harmony?.UnpatchSelf();
@@ -252,12 +281,15 @@ namespace ValheimVanillaPlus
             // Per-frame features go here, one Safe(...) line each.
             var p = Player.m_localPlayer;
             Safe("RepairAlert", () => DurabilityAlert.Update(p));
+            Safe("FoodAlert", () => FoodAlert.Update(p));
+            Safe("DeathLog", () => DeathLog.Update(p));
             Safe("CraftListRefresh", () => CraftFromChests.Update(p));
             Safe("WaypointPins", Waypoints.UpdatePins);
+            Safe("MapReveal", MapReveal.Update);
             AutoReconnect.OnInWorld();
 
             // Don't toggle while typing in chat / console / a text box.
-            if (Console.IsVisible() || Chat.instance?.HasFocus() == true || TextInput.IsVisible())
+            if (Console.IsVisible() || Chat.instance?.HasFocus() == true || TextInput.IsVisible() || HotkeyEditor.Busy)
                 return;
 
             if (MenuKey.Value.IsDown()) { MenuWindow.IsOpen = !MenuWindow.IsOpen; if (MenuWindow.IsOpen) StorageWindow.IsOpen = false; }
@@ -277,6 +309,7 @@ namespace ValheimVanillaPlus
         private void OnGUI()
         {
             if (_unloading) return;
+            HotkeyEditor.Capture(); // a hotkey being set in the menu takes the next key press
             // GUI.skin is Unity's default at this point (Unity resets it before every OnGUI).
             var unity = GUI.skin;
             var theme = MenuTheme.Current(unity);
@@ -297,6 +330,8 @@ namespace ValheimVanillaPlus
             Safe("StoreAll", StoreAll.DrawButton);
             Safe("CraftSearch", CraftSearch.Draw);
             Safe("SignEditor", SignEditor.Draw);
+            Safe("ColorPicker", ColorPicker.DrawPanel);
+            Safe("ItemPicker", ItemPicker.DrawPanel);
             Safe("Menu", MenuWindow.Draw);
             Safe("Storage", StorageWindow.Draw);
             GUI.skin = unity;

@@ -1,6 +1,6 @@
 {
   "name": "ValheimVanillaPlus",
-  "version_number": "0.1.0",
+  "version_number": "1.0.0",
   "website_url": "https://github.com/liekos47/valheim-vanillaplus-mode",
   "description": "Client-side convenience: craft and sign search, sign editor, storage window over nearby chests, craft from chests, waypoints, radar, night vision, pickup filter, repair alert, player stats, auto reconnect.",
   "dependencies": [

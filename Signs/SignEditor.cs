@@ -75,18 +75,8 @@ namespace ValheimVanillaPlus
                 _swatch.normal.background = _swatch.hover.background = _swatch.active.background = Texture2D.whiteTexture;
             }
 
-            // To the right of the game's text box (or under it if there's no room).
-            var panel = TextInput.instance.m_panel != null ? TextInput.instance.m_panel.GetComponent<RectTransform>() : null;
-            float x = Screen.width / 2f + 260f, y = Screen.height / 2f - 200f;
-            if (panel != null)
-            {
-                panel.GetWorldCorners(Corners);
-                x = Corners[2].x + 12f; y = Screen.height - Corners[2].y;
-                if (x + 380f > Screen.width) { x = Corners[0].x; y = Screen.height - Corners[0].y + 12f; }
-            }
-            const float height = 610f;
-            y = Mathf.Max(4f, Mathf.Min(y, Screen.height - height - 4f));
-            GUILayout.BeginArea(new Rect(x, y, 380f, height), GUI.skin.box);
+            // Beside the game's text box, never over it.
+            GUILayout.BeginArea(PanelPlace.Beside(TextInput.instance.m_panel, 380f, 380f, 610f), GUI.skin.box);
             GUILayout.Label($"<b>Sign colors & icons</b>   <color=#999999>{f.text.Length}/{f.characterLimit} characters</color>", _rich);
             GUILayout.Label(Preview(f.text), _preview, GUILayout.MinHeight(44f));
 
