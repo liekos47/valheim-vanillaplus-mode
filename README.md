@@ -25,13 +25,24 @@ dotnet build -c Release
 The build copies `ValheimVanillaPlus.dll` into `Valheim\BepInEx\plugins\ValheimVanillaPlus\`.
 If Valheim is installed elsewhere: `dotnet build -c Release -p:ValheimDir="D:\...\Valheim"`.
 
-**Reloading without a restart** (development only): install
-[ScriptEngine](https://github.com/BepInEx/BepInEx.Debug#scriptengine) in `BepInEx\plugins`, remove
-`plugins\ValheimVanillaPlus\`, and build with `dotnet build -c Release -p:ScriptEngine=true`, which
-copies the DLL into `BepInEx\scripts` instead. Press F6 in game to load or reload it. On unload the
-plugin takes out what it added to the game's screens and removes its patches
-(`VanillaPlusPlugin.Teardown`). The old code stays in memory until the game closes; if something
-looks off after a reload, restart once before chasing it.
+**Reloading without a restart** (development only) uses BepInEx's
+[ScriptEngine](https://github.com/BepInEx/BepInEx.Debug#scriptengine); the mod has no reload code
+of its own.
+
+1. Put `ScriptEngine.dll` (from the BepInEx.Debug releases) in `BepInEx\plugins`.
+2. Remove `BepInEx\plugins\ValheimVanillaPlus\`. The mod must be in `plugins` or in `scripts`,
+   never both, or it loads twice.
+3. Build with `dotnet build -c Release -p:ScriptEngine=true`, which copies the DLL into
+   `BepInEx\scripts` instead of `plugins`. Add the same option to every build while set up this
+   way, the Thunderstore package build included.
+4. In game, press F6 to load the mod, and again after each build to reload it. It is not loaded
+   when the game starts unless ScriptEngine's own config says so
+   (`BepInEx\config\com.bepis.bepinex.scriptengine.cfg`, written on first launch).
+
+On unload the plugin takes out what it added to the game's screens and removes its patches
+(`VanillaPlusPlugin.Teardown`, called from `OnDestroy`). The old code stays in memory until the
+game closes; if something looks off after a reload, restart once before chasing it. To go back to
+a normal install, delete `BepInEx\scripts\ValheimVanillaPlus.dll` and build without the option.
 
 **Thunderstore package**: `dotnet build -c Release -t:PackThunderstore` writes
 `bin\thunderstore\liekos47-ValheimVanillaPlus-<version>.zip` from the `Thunderstore\` folder
