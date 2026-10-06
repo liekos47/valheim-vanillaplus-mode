@@ -1,5 +1,7 @@
 # Valheim Vanilla Plus
 
+[![Support me on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20the%20mod-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/liekos47)
+
 Client-side convenience for the unmodded game. No cheats: nothing here changes what your character
 can do, what the world gives you or how the game saves. Features are interface helpers (search
 boxes, a sign editor, a Clear button) and local visual aids (night vision). Because of that there
