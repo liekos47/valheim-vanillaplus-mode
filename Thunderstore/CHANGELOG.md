@@ -1,3 +1,6 @@
+## v1.1.0
+- Removed the built-in hot reload (and its "Development" option in the More tab), as suggested in the Thunderstore review. Developers can use BepInEx's ScriptEngine instead; the plugin now cleans up after itself when it is unloaded.
+
 ## v1.0.0
 - Reveal map: show the whole world map by removing the map fog (display only, nothing saved; off by default).
 - Death log: the cause of each death (creature, fire, poison, fall, drowning, ...), the last hits before it, and a history in the Stats tab.

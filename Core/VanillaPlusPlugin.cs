@@ -13,7 +13,7 @@ namespace ValheimVanillaPlus
     {
         public const string Guid = "liekos47.valheimvanillaplus";
         public const string Name = "Valheim Vanilla Plus";
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
 
         internal static ConfigEntry<bool> TextClearButton, ShowFps;
         internal static ConfigEntry<bool> CraftSearchEnabled;
@@ -53,7 +53,7 @@ namespace ValheimVanillaPlus
         internal static ConfigEntry<MenuThemeMode> MenuThemeSetting;
         internal static ConfigEntry<float> MenuX, MenuY, MenuWidth, MenuHeight, StorageWidth, StorageHeight;
         internal static ConfigEntry<KeyboardShortcut> MenuKey;
-        internal static ConfigEntry<bool> HotReloadEnabled, RangePreviewEnabled, RevealMap;
+        internal static ConfigEntry<bool> RangePreviewEnabled, RevealMap;
 
         internal static BepInEx.Logging.ManualLogSource Log;
         private static VanillaPlusPlugin _instance;
@@ -233,30 +233,26 @@ namespace ValheimVanillaPlus
 
             RangePreviewEnabled = Config.Bind("Menu", "RangePreview", true, "Show a circle on the ground while dragging a distance slider in the menu or the storage window.");
 
-            HotReloadEnabled = Config.Bind("General", "HotReload", true,
-                "Load a new build of this plugin as soon as it is copied into BepInEx/plugins, without restarting the game.");
-            HotReload.Init();
-
             _harmony = new Harmony(Guid);
             _harmony.PatchAll(typeof(VanillaPlusPlugin).Assembly);
             Logger.LogInfo($"{Name} {Version} loaded");
         }
 
-        private void OnDestroy() => _harmony?.UnpatchSelf();
+        private void OnDestroy() => Teardown();
 
-        // Shut this copy of the plugin down so another build can take over (see HotReload): what it
-        // added to the game's screens is taken out again, then the patches are removed.
+        // Shut this copy of the plugin down so another build can take over (a reload with BepInEx's
+        // ScriptEngine destroys this component, then loads the new DLL): what it added to the game's
+        // screens is taken out again, then the patches are removed.
         private bool _unloading;
         internal void Teardown()
         {
+            if (_unloading) return;
             _unloading = true;
             MenuWindow.IsOpen = false;
             Safe("ClearButton cleanup", TextInputClear.Cleanup);
             Safe("SignIcons cleanup", SignIcons.Cleanup);
             Safe("Waypoints cleanup", Waypoints.Cleanup);
             Safe("MapReveal cleanup", MapReveal.Cleanup);
-            // Unpatch now and forget the instance: this component is destroyed at the end of the frame,
-            // after the next build has patched under the same Harmony id, and OnDestroy must not strip those.
             _harmony?.UnpatchSelf();
             _harmony = null;
             BepInEx.Logging.Logger.Sources.Remove(Logger);
@@ -265,7 +261,6 @@ namespace ValheimVanillaPlus
         private void Update()
         {
             if (_unloading) return;
-            if (HotReload.Due()) { HotReload.Reload(this); return; }
             FpsCounter.CountFrame();
             MenuTheme.Update();
             Safe("SignEditor", SignEditor.Update);

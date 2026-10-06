@@ -389,9 +389,6 @@ namespace ValheimVanillaPlus
                     GUILayout.EndHorizontal();
                 }
             }
-
-            Header("Development");
-            Toggle(VanillaPlusPlugin.HotReloadEnabled, "Hot reload: load a new build without restarting the game");
         }
 
         private static System.Collections.Generic.List<string> _backups = new System.Collections.Generic.List<string>();

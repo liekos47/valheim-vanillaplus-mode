@@ -25,10 +25,13 @@ dotnet build -c Release
 The build copies `ValheimVanillaPlus.dll` into `Valheim\BepInEx\plugins\ValheimVanillaPlus\`.
 If Valheim is installed elsewhere: `dotnet build -c Release -p:ValheimDir="D:\...\Valheim"`.
 
-**Hot reload** (`[General] HotReload`, default on): build while Valheim is running and the new DLL
-is loaded in place of the running one within a couple of seconds, no restart. The old code stays
-in memory until the game closes; if something looks off after a reload, restart once before
-chasing it. See `Core/HotReload.cs`.
+**Reloading without a restart** (development only): install
+[ScriptEngine](https://github.com/BepInEx/BepInEx.Debug#scriptengine) in `BepInEx\plugins`, remove
+`plugins\ValheimVanillaPlus\`, and build with `dotnet build -c Release -p:ScriptEngine=true`, which
+copies the DLL into `BepInEx\scripts` instead. Press F6 in game to load or reload it. On unload the
+plugin takes out what it added to the game's screens and removes its patches
+(`VanillaPlusPlugin.Teardown`). The old code stays in memory until the game closes; if something
+looks off after a reload, restart once before chasing it.
 
 **Thunderstore package**: `dotnet build -c Release -t:PackThunderstore` writes
 `bin\thunderstore\liekos47-ValheimVanillaPlus-<version>.zip` from the `Thunderstore\` folder
@@ -272,7 +275,7 @@ gray. Markers drawn over the world (waypoints, radar, sign search, FPS) keep the
 
 | Folder | What lives there |
 |--------|------------------|
-| `Core/` | The plugin (`VanillaPlusPlugin.cs`: config entries, update loop), the options menu (`MenuWindow.cs`, `MenuTheme.cs`) input blocking while typing in a search box (`SearchInputBlock.cs`), hot reload (`HotReload.cs`), and shared helpers: on-screen boxes / lines / labels (`Overlay.cs`), asking for text with the game's box (`TextPrompt.cs`), world key and compass (`WorldInfo.cs`), placing panels beside the text box without covering it (`PanelPlace.cs`), the window resize grip (`WindowResize.cs`), the hotkey rows in the menu (`HotkeyEditor.cs`), the range circle (`RangePreview.cs`), config backups (`ConfigBackup.cs`), the color panel shown beside the text box when editing a color setting (`ColorPicker.cs`) |
+| `Core/` | The plugin (`VanillaPlusPlugin.cs`: config entries, update loop), the options menu (`MenuWindow.cs`, `MenuTheme.cs`) input blocking while typing in a search box (`SearchInputBlock.cs`), and shared helpers: on-screen boxes / lines / labels (`Overlay.cs`), asking for text with the game's box (`TextPrompt.cs`), world key and compass (`WorldInfo.cs`), placing panels beside the text box without covering it (`PanelPlace.cs`), the window resize grip (`WindowResize.cs`), the hotkey rows in the menu (`HotkeyEditor.cs`), the range circle (`RangePreview.cs`), config backups (`ConfigBackup.cs`), the color panel shown beside the text box when editing a color setting (`ColorPicker.cs`) |
 | `Interface/` | Changes to the game's own screens: Clear button (`TextInputClear.cs`), FPS counter (`FpsCounter.cs`) |
 | `Crafting/` | Craft search (`CraftSearch.cs`), craft from chests (`CraftFromChests.cs`) |
 | `Chests/` | Storage window (`Storage.cs`), Store all button (`StoreAll.cs`), batch click (`BatchTransfer.cs`), the list of loaded chests (`ChestTracker.cs`) |
@@ -377,7 +380,7 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
   is a second texture (`Minimap.m_fogTexture`) laid over it locally; its red channel is "explored
   by me", green "explored by others", 0 = clear. The reveal keeps a copy of that texture and
   writes one with both channels at 0. `Minimap.m_explored` / `m_exploredOthers`, which are what
-  get saved to your character, are never written. Switching off (or a hot reload) restores the
+  get saved to your character, are never written. Switching off (or a ScriptEngine reload) restores the
   copy, clearing whatever those two arrays say was explored in the meantime. No dev command is
   called and nothing is asked of the server; the picture is the same one the devcommands-only
   `exploremap` gives, except that command saves it. Location pins (bosses, traders) are not part
@@ -386,7 +389,7 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
 - **Waypoints** – a tab-separated text file, one line per waypoint (world key, name, x, y, z,
   pin icon; lines from before the icon column load with the default dot);
   the world key is server address + world name + world id. Map pins use `Minimap.AddPin` with
-  save = false and are removed again when the option is off or on hot reload. Markers are drawn
+  save = false and are removed again when the option is off or on a ScriptEngine reload. Markers are drawn
   in `OnGUI` from `Camera.WorldToScreenPoint`. A `Player.OnDeath` prefix sets "Last death". Icons are
   `Minimap.PinType.Icon0`–`Icon4`, drawn from `Minimap.m_icons`. Map-pin markers read
   `Minimap.m_pins` and keep pins that are saved, yours (`m_ownerID` 0), not checked, and of a
@@ -417,7 +420,7 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
   countdown for `ErrorDisconnected` (and `ErrorConnectFailed` once retrying, for a server still
   restarting). When it runs out: `SetServerToJoin` + `JoinServer`, the menu's own join path. God
   mode's "also after being kicked" was left out. The remembered server and password live in
-  memory, so a hot reload forgets them until you next join. Switched off when Valheim God Mode is
+  memory, so a ScriptEngine reload forgets them until you next join. Switched off when Valheim God Mode is
   installed (it has the same feature).
 - **Night vision** – `EnvMan.SetEnv` postfix raises `RenderSettings.ambientLight` to at least
   `Brightness` per channel; fog is not touched (god mode's "clear dark fog" was left out).
@@ -474,4 +477,4 @@ feature list, the hotkey table if it has a key, this table, "How it works" and t
 24. In a small game window (1280x720), open a sign, the default sign color and a pickup list: each side panel sits beside the text box, not over it.
 25. Click a waypoint's icon button: its map pin and on-screen marker change icon. Turn on markers for map pins, place a pin on the map and check its marker appears; cross it out and check it goes.
 26. Die once to a creature and once to a fall: each time the cause shows on screen and a row appears in Stats → Death log with sensible "Last hits". Check a new game update's hit types against the names in `DeathLog.Cause`.
-27. Build once more with the game running and check the log says "Hot reload: switching to the build from ...".
+27. With ScriptEngine installed and the DLL in `BepInEx\scripts`, press F6: the plugin reloads, the Clear button and waypoint pins appear once (not doubled), and the log shows no errors.

@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <Reference Include="BepInEx"><HintPath>$(BepInExDir)\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="Mono.Cecil"><HintPath>$(BepInExDir)\core\Mono.Cecil.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="0Harmony"><HintPath>$(BepInExDir)\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="assembly_valheim"><HintPath>$(ManagedDir)\assembly_valheim.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="assembly_utils"><HintPath>$(ManagedDir)\assembly_utils.dll</HintPath><Private>false</Private></Reference>
@@ -38,9 +37,14 @@
     <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 
-  <!-- Copy the built plugin straight into BepInEx/plugins -->
+  <!-- Copy the built plugin straight into BepInEx/plugins, or with -p:ScriptEngine=true into
+       BepInEx/scripts, where BepInEx's ScriptEngine reloads it in a running game (F6). -->
+  <PropertyGroup>
+    <DeployDir>$(BepInExDir)\plugins\ValheimVanillaPlus</DeployDir>
+    <DeployDir Condition="'$(ScriptEngine)' == 'true'">$(BepInExDir)\scripts</DeployDir>
+  </PropertyGroup>
   <Target Name="DeployToValheim" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExDir)\plugins\ValheimVanillaPlus" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" />
   </Target>
 
   <!-- Thunderstore package: dotnet build -c Release -t:PackThunderstore
