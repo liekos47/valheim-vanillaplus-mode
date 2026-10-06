@@ -1,3 +1,6 @@
+## v1.1.1
+- Re-upload of 1.1.0 for review. No functional changes.
+
 ## v1.1.0
 - Removed the built-in hot reload (and its "Development" option in the More tab), as suggested in the Thunderstore review. Developers can use BepInEx's ScriptEngine instead; the plugin now cleans up after itself when it is unloaded.
 

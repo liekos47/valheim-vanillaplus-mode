@@ -13,7 +13,7 @@ namespace ValheimVanillaPlus
     {
         public const string Guid = "liekos47.valheimvanillaplus";
         public const string Name = "Valheim Vanilla Plus";
-        public const string Version = "1.1.0";
+        public const string Version = "1.1.1";
 
         internal static ConfigEntry<bool> TextClearButton, ShowFps;
         internal static ConfigEntry<bool> CraftSearchEnabled;
